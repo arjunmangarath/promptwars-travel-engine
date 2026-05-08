@@ -1,19 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { TripForm } from "@/components/TripForm";
 import { ItineraryView } from "@/components/ItineraryView";
+import { trackTripPlanned } from "@/lib/analytics";
 import type { TripPreferences, TripItinerary } from "@/types";
 
 export default function Home() {
   const [itinerary, setItinerary] = useState<TripItinerary | null>(null);
+  const [cached, setCached] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handlePlan(preferences: TripPreferences) {
+  const handlePlan = useCallback(async (preferences: TripPreferences) => {
     setLoading(true);
     setError(null);
     setItinerary(null);
+    setCached(false);
+
+    trackTripPlanned(preferences.destination, preferences.budget);
 
     try {
       const res = await fetch("/api/plan", {
@@ -29,15 +34,23 @@ export default function Home() {
       }
 
       setItinerary(data.itinerary);
+      setCached(data.cached ?? false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-md"
+      >
+        Skip to main content
+      </a>
+
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
           <span aria-hidden="true" className="text-2xl">✈️</span>
@@ -46,7 +59,7 @@ export default function Home() {
               Travel Planning & Experience Engine
             </h1>
             <p className="text-xs text-slate-500">
-              Powered by Google Gemini AI
+              Powered by Google Gemini AI · Firebase · Google Maps
             </p>
           </div>
         </div>
@@ -99,7 +112,7 @@ export default function Home() {
               </div>
             )}
 
-            {itinerary && <ItineraryView itinerary={itinerary} />}
+            {itinerary && <ItineraryView itinerary={itinerary} cached={cached} />}
 
             {!loading && !error && !itinerary && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center text-slate-400">
@@ -115,7 +128,7 @@ export default function Home() {
       </main>
 
       <footer className="mt-16 border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        Built with Next.js, TypeScript & Google Gemini AI ·{" "}
+        Built with Next.js · Google Gemini AI · Firebase · Google Maps ·{" "}
         <span>PromptWars Bengaluru 2026</span>
       </footer>
     </div>

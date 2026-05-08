@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateItinerary } from "@/lib/gemini";
+import { getCachedItinerary, setCachedItinerary } from "@/lib/cache";
 import { z } from "zod";
 import type { PlanResponse, ApiError } from "@/types";
 
@@ -38,15 +39,40 @@ export async function POST(
       );
     }
 
+    // Check Firestore cache first — avoids redundant Gemini API calls
+    const cached = await getCachedItinerary(preferences);
+    if (cached) {
+      return NextResponse.json(
+        { itinerary: cached, generatedAt: new Date().toISOString(), cached: true },
+        {
+          headers: {
+            "X-Cache": "HIT",
+            "Cache-Control": "private, max-age=3600",
+          },
+        }
+      );
+    }
+
     const itinerary = await generateItinerary(preferences);
 
-    return NextResponse.json({
-      itinerary,
-      generatedAt: new Date().toISOString(),
-    });
+    // Store in Firestore for future cache hits
+    void setCachedItinerary(preferences, itinerary);
+
+    return NextResponse.json(
+      { itinerary, generatedAt: new Date().toISOString(), cached: false },
+      {
+        headers: {
+          "X-Cache": "MISS",
+          "Cache-Control": "private, max-age=3600",
+        },
+      }
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[/api/plan]", message);
-    return NextResponse.json({ error: "Failed to generate itinerary", details: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate itinerary", details: message },
+      { status: 500 }
+    );
   }
 }

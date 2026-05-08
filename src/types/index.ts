@@ -46,6 +46,7 @@ export interface PlanRequest {
 export interface PlanResponse {
   itinerary: TripItinerary;
   generatedAt: string;
+  cached?: boolean;
 }
 
 export interface ApiError {
