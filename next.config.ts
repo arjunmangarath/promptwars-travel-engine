@@ -26,8 +26,11 @@ const securityHeaders = [
       "font-src 'self' *.gstatic.com",
       "object-src 'none'",
       "base-uri 'self'",
+      "frame-ancestors 'self'",
+      "upgrade-insecure-requests",
     ].join("; "),
   },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
 ];
 
 const nextConfig: NextConfig = {

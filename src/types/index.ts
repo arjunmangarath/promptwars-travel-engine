@@ -1,57 +1,57 @@
 export interface TripPreferences {
-  destination: string;
-  startDate: string;
-  endDate: string;
-  travelers: number;
-  budget: "low" | "medium" | "high";
-  interests: string[];
-  dietaryRestrictions: string;
-  mobilityConstraints: string;
-  accommodationType: "hotel" | "hostel" | "airbnb" | "resort";
+  readonly destination: string;
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly travelers: number;
+  readonly budget: "low" | "medium" | "high";
+  readonly interests: readonly string[];
+  readonly dietaryRestrictions: string;
+  readonly mobilityConstraints: string;
+  readonly accommodationType: "hotel" | "hostel" | "airbnb" | "resort";
 }
 
 export interface Activity {
-  time: string;
-  activity: string;
-  location: string;
-  description: string;
-  estimatedCost: string;
-  tips: string;
-  accessibilityNotes?: string;
+  readonly time: string;
+  readonly activity: string;
+  readonly location: string;
+  readonly description: string;
+  readonly estimatedCost: string;
+  readonly tips: string;
+  readonly accessibilityNotes?: string;
 }
 
 export interface DayPlan {
-  day: number;
-  date: string;
-  theme: string;
-  activities: Activity[];
+  readonly day: number;
+  readonly date: string;
+  readonly theme: string;
+  readonly activities: readonly Activity[];
 }
 
 export interface TripItinerary {
-  tripTitle: string;
-  destination: string;
-  duration: string;
-  estimatedBudget: string;
-  currency: string;
+  readonly tripTitle: string;
+  readonly destination: string;
+  readonly duration: string;
+  readonly estimatedBudget: string;
+  readonly currency: string;
   /** Real-time seasonal weather context for the travel dates, provided by the AI. */
-  weatherConsiderations?: string;
-  days: DayPlan[];
-  packingList: string[];
-  travelTips: string[];
-  emergencyContacts: string[];
+  readonly weatherConsiderations?: string;
+  readonly days: readonly DayPlan[];
+  readonly packingList: readonly string[];
+  readonly travelTips: readonly string[];
+  readonly emergencyContacts: readonly string[];
 }
 
 export interface PlanRequest {
-  preferences: TripPreferences;
+  readonly preferences: TripPreferences;
 }
 
 export interface PlanResponse {
-  itinerary: TripItinerary;
-  generatedAt: string;
-  cached?: boolean;
+  readonly itinerary: TripItinerary;
+  readonly generatedAt: string;
+  readonly cached?: boolean;
 }
 
 export interface ApiError {
-  error: string;
-  details?: string;
+  readonly error: string;
+  readonly details?: string;
 }

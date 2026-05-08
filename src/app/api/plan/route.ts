@@ -114,8 +114,10 @@ export async function POST(
         statusCode: err.statusCode,
         durationMs,
       });
+      const details =
+        err instanceof ValidationError ? err.details : undefined;
       return NextResponse.json(
-        { error: err.message, details: "details" in err ? (err as { details?: string }).details : undefined },
+        { error: err.message, ...(details && { details }) },
         {
           status: err.statusCode,
           headers: { "X-Request-ID": requestId, "X-Response-Time": `${durationMs}ms` },
