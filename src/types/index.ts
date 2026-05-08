@@ -33,6 +33,8 @@ export interface TripItinerary {
   duration: string;
   estimatedBudget: string;
   currency: string;
+  /** Real-time seasonal weather context for the travel dates, provided by the AI. */
+  weatherConsiderations?: string;
   days: DayPlan[];
   packingList: string[];
   travelTips: string[];

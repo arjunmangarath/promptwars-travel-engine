@@ -123,6 +123,17 @@ export const ItineraryView = memo(function ItineraryView({ itinerary, cached }: 
       {/* Google Maps embed — powered by Google Maps */}
       <GoogleMapEmbed destination={itinerary.destination} />
 
+      {itinerary.weatherConsiderations && (
+        <section aria-label="Weather and seasonal context">
+          <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
+            <span aria-hidden="true">🌤️</span> Weather & Seasonal Context
+          </h3>
+          <p className="text-sm text-slate-600 bg-sky-50 border border-sky-200 rounded-xl px-4 py-3 leading-relaxed">
+            {itinerary.weatherConsiderations}
+          </p>
+        </section>
+      )}
+
       <section aria-label="Day-by-day itinerary">
         <h3 className="text-lg font-semibold text-slate-800 mb-4">Your Itinerary</h3>
         <div className="space-y-6">
