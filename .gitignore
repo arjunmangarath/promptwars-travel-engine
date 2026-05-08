@@ -1,0 +1,12 @@
+.env*.local
+.env
+node_modules/
+.next/
+out/
+*.db
+ruvector.db
+.claude-flow/
+.swarm/
+.claude/
+Dockerfile
+.dockerignore
