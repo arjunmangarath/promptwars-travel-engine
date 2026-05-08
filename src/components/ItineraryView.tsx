@@ -46,7 +46,7 @@ function ChevronRight() {
   );
 }
 
-function GoogleMapEmbed({ destination, locations }: { destination: string; locations: string[] }) {
+function GoogleMapEmbed({ destination, locations, compact }: { destination: string; locations: string[]; compact?: boolean }) {
   const encodedDestination = encodeURIComponent(destination);
 
   let embedSrc: string;
@@ -86,7 +86,7 @@ function GoogleMapEmbed({ destination, locations }: { destination: string; locat
         title={`Google Maps view of ${destination}`}
         src={embedSrc}
         width="100%"
-        height="300"
+        height={compact ? "200" : "300"}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
         aria-label={`Interactive map showing ${locations.length > 1 ? "all activity locations" : destination}`}
@@ -120,6 +120,8 @@ function DaySlide({ day, date, destination }: { day: DayPlan; date: string; dest
     description: day.activities.map((a) => `${a.time} — ${a.activity} at ${a.location}`).join("\n"),
   });
 
+  const dayLocations = Array.from(new Set(day.activities.map((a) => a.location)));
+
   return (
     <section aria-label={`Day ${day.day}: ${day.theme}`} className="min-h-[340px]">
       {/* Slide header */}
@@ -147,8 +149,15 @@ function DaySlide({ day, date, destination }: { day: DayPlan; date: string; dest
         </a>
       </div>
 
+      {/* Per-day map */}
+      <GoogleMapEmbed
+        destination={destination}
+        locations={dayLocations}
+        compact
+      />
+
       {/* Activities */}
-      <ol className="space-y-3" aria-label={`Activities for day ${day.day}`}>
+      <ol className="mt-4 space-y-3" aria-label={`Activities for day ${day.day}`}>
         {day.activities.map((activity, idx) => {
           const activityCalendarUrl = buildGoogleCalendarUrl({
             title: activity.activity,
@@ -388,12 +397,6 @@ export const ItineraryView = memo(function ItineraryView({ itinerary, cached }: 
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Map */}
-        <GoogleMapEmbed
-          destination={itinerary.destination}
-          locations={Array.from(new Set(itinerary.days.flatMap((d) => d.activities.map((a) => a.location))))}
-        />
-
         {/* Weather */}
         {itinerary.weatherConsiderations && (
           <section aria-label="Weather and seasonal context" className="bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-100 rounded-xl px-4 py-4">
