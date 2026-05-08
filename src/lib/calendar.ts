@@ -1,16 +1,17 @@
 /**
- * Generates Google Calendar event URLs using the Calendar API URL scheme.
- * Opens Google Calendar with a pre-filled event — no OAuth required.
- * Ref: https://calendar.google.com/calendar/render?action=TEMPLATE
+ * Google Calendar event URL builder using the Calendar API URL scheme.
+ * Opens Google Calendar pre-filled with event details — no OAuth required.
+ * @see https://calendar.google.com/calendar/render?action=TEMPLATE
  */
 
+/** Converts YYYY-MM-DD + HH:MM into YYYYMMDDTHHMMSS (Calendar API format). */
 function toCalendarDate(date: string, time: string): string {
-  // Combines YYYY-MM-DD + HH:MM into YYYYMMDDTHHMMSS format
   const [year, month, day] = date.split("-");
   const [hour, minute] = time.split(":");
   return `${year}${month}${day}T${hour}${minute}00`;
 }
 
+/** Returns a time string one hour ahead, wrapping midnight correctly. */
 function addHour(time: string): string {
   const [h, m] = time.split(":").map(Number);
   const newH = (h + 1) % 24;
@@ -19,12 +20,19 @@ function addHour(time: string): string {
 
 export interface CalendarEventOptions {
   title: string;
-  date: string;        // YYYY-MM-DD
-  startTime: string;   // HH:MM
+  /** ISO date string in YYYY-MM-DD format */
+  date: string;
+  /** 24-hour time in HH:MM format */
+  startTime: string;
   location?: string;
   description?: string;
 }
 
+/**
+ * Builds a Google Calendar URL for a timed activity event (1-hour default duration).
+ * @param opts - Event options including title, date, start time, and optional location/description
+ * @returns Full Google Calendar render URL that pre-fills the event creation form
+ */
 export function buildGoogleCalendarUrl(opts: CalendarEventOptions): string {
   const start = toCalendarDate(opts.date, opts.startTime);
   const end = toCalendarDate(opts.date, addHour(opts.startTime));
@@ -40,8 +48,14 @@ export function buildGoogleCalendarUrl(opts: CalendarEventOptions): string {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
+/**
+ * Builds a Google Calendar URL for an all-day event (full trip day or entire trip).
+ * @param opts - Event options including title, date, and optional description
+ * @returns Full Google Calendar render URL that pre-fills an all-day event
+ */
 export function buildGoogleCalendarDayUrl(opts: {
   title: string;
+  /** ISO date string in YYYY-MM-DD format */
   date: string;
   description?: string;
 }): string {

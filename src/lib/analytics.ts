@@ -14,6 +14,11 @@ const firebaseConfig = {
 
 let analytics: Analytics | null = null;
 
+/**
+ * Lazily initialises Firebase Analytics on first call.
+ * Returns null when called server-side or when the browser blocks analytics
+ * (e.g. ad blockers, Safari ITP). All callers handle null gracefully.
+ */
 export async function initAnalytics(): Promise<Analytics | null> {
   if (typeof window === "undefined") return null;
   try {
@@ -28,14 +33,22 @@ export async function initAnalytics(): Promise<Analytics | null> {
   }
 }
 
-export function trackTripPlanned(destination: string, budget: string) {
+/**
+ * Fires a `trip_planned` event with destination and budget tier.
+ * No-ops server-side or when analytics is unavailable.
+ */
+export function trackTripPlanned(destination: string, budget: string): void {
   if (typeof window === "undefined") return;
   initAnalytics().then((a) => {
     if (a) logEvent(a, "trip_planned", { destination, budget });
   });
 }
 
-export function trackItineraryViewed(destination: string, days: number) {
+/**
+ * Fires an `itinerary_viewed` event with destination and number of days.
+ * No-ops server-side or when analytics is unavailable.
+ */
+export function trackItineraryViewed(destination: string, days: number): void {
   if (typeof window === "undefined") return;
   initAnalytics().then((a) => {
     if (a) logEvent(a, "itinerary_viewed", { destination, days });

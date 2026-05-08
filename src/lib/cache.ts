@@ -3,7 +3,13 @@ import type { TripPreferences, TripItinerary } from "@/types";
 
 const COLLECTION = "itinerary_cache";
 const TTL_DAYS = 7;
+const TTL_MS = TTL_DAYS * 24 * 60 * 60 * 1000;
 
+/**
+ * Produces a 20-char hex cache key from trip preferences.
+ * Normalises destination casing and sorts interests so that
+ * semantically identical requests always map to the same key.
+ */
 export function hashPreferences(prefs: TripPreferences): string {
   const normalized = JSON.stringify({
     destination: prefs.destination.toLowerCase().trim(),
@@ -19,6 +25,10 @@ export function hashPreferences(prefs: TripPreferences): string {
   return crypto.createHash("sha256").update(normalized).digest("hex").slice(0, 20);
 }
 
+/**
+ * Retrieves a cached itinerary from Firestore, respecting the 7-day TTL.
+ * Returns null on any error so the caller always falls through to AI generation.
+ */
 export async function getCachedItinerary(
   prefs: TripPreferences
 ): Promise<TripItinerary | null> {
@@ -32,13 +42,17 @@ export async function getCachedItinerary(
     if (!data?.itinerary) return null;
     const cachedAt = new Date(data.cachedAt as string);
     const ageMs = Date.now() - cachedAt.getTime();
-    if (ageMs > TTL_DAYS * 24 * 60 * 60 * 1000) return null;
+    if (ageMs > TTL_MS) return null;
     return data.itinerary as TripItinerary;
   } catch {
     return null;
   }
 }
 
+/**
+ * Persists a generated itinerary to Firestore for future cache hits.
+ * Silently no-ops on write failure — caching is best-effort.
+ */
 export async function setCachedItinerary(
   prefs: TripPreferences,
   itinerary: TripItinerary

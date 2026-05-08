@@ -4,19 +4,32 @@ import type { TripPreferences, TripItinerary } from "@/types";
 const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || "promptwars-live";
 const LOCATION = "us-central1";
 
-// Only gemini-2.5-flash is available via Vertex AI on this project
-const VERTEX_MODELS = ["gemini-2.5-flash"];
-// API key fallback models (local dev only)
-const API_KEY_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+/** Only gemini-2.5-flash is enabled in the Vertex AI Model Garden for this project. */
+const VERTEX_MODELS = ["gemini-2.5-flash"] as const;
+/** API key fallback model list for local development (Vertex ADC not available). */
+const API_KEY_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"] as const;
 
+/** Returns a Vertex AI client authenticated via Application Default Credentials. */
 function getVertexClient(): GoogleGenAI {
   return new GoogleGenAI({ vertexai: true, project: PROJECT_ID, location: LOCATION });
 }
 
+/** Returns a Gemini client authenticated via API key (local dev fallback). */
 function getApiKeyClient(apiKey: string): GoogleGenAI {
   return new GoogleGenAI({ apiKey });
 }
 
+/**
+ * Calls Google Gemini to generate a day-by-day travel itinerary.
+ *
+ * Strategy:
+ * 1. Try Vertex AI (ADC — no quota limits, used in production on Cloud Run).
+ * 2. Fall back to API key client (local dev only, subject to free-tier limits).
+ *
+ * @param preferences - Validated trip preferences from the user
+ * @returns A structured TripItinerary with days, activities, tips, and packing list
+ * @throws When all model attempts fail and no itinerary can be generated
+ */
 export async function generateItinerary(
   preferences: TripPreferences
 ): Promise<TripItinerary> {
@@ -27,7 +40,9 @@ export async function generateItinerary(
         (1000 * 60 * 60 * 24)
     ) || 1;
 
-  const prompt = `You are an expert travel planner. Generate a detailed, practical travel itinerary.
+  const today = new Date().toISOString().split("T")[0];
+
+  const prompt = `You are an expert travel planner with real-time destination knowledge. Today's date is ${today}. Generate a detailed, practical travel itinerary that accounts for current seasonal conditions.
 
 Trip Details:
 - Destination: ${preferences.destination}
@@ -38,6 +53,8 @@ Trip Details:
 - Dietary restrictions: ${preferences.dietaryRestrictions || "none"}
 - Mobility constraints: ${preferences.mobilityConstraints || "none"}
 - Accommodation: ${preferences.accommodationType}
+
+Consider current season, local events, and weather conditions typical for the travel dates when planning activities and packing recommendations.
 
 Return ONLY valid JSON matching this exact schema:
 {

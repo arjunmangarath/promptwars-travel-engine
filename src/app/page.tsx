@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { TripForm } from "@/components/TripForm";
 import { ItineraryView } from "@/components/ItineraryView";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { trackTripPlanned } from "@/lib/analytics";
 import type { TripPreferences, TripItinerary } from "@/types";
 
@@ -11,6 +12,13 @@ export default function Home() {
   const [cached, setCached] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (itinerary && resultsRef.current) {
+      resultsRef.current.focus();
+    }
+  }, [itinerary]);
 
   const handlePlan = useCallback(async (preferences: TripPreferences) => {
     setLoading(true);
@@ -81,7 +89,13 @@ export default function Home() {
             <TripForm onSubmit={handlePlan} loading={loading} />
           </div>
 
-          <div aria-live="polite" aria-atomic="true">
+          <div
+            ref={resultsRef}
+            tabIndex={-1}
+            aria-live="polite"
+            aria-atomic="true"
+            className="focus:outline-none"
+          >
             {loading && (
               <div
                 role="status"
@@ -112,7 +126,11 @@ export default function Home() {
               </div>
             )}
 
-            {itinerary && <ItineraryView itinerary={itinerary} cached={cached} />}
+            {itinerary && (
+              <ErrorBoundary>
+                <ItineraryView itinerary={itinerary} cached={cached} />
+              </ErrorBoundary>
+            )}
 
             {!loading && !error && !itinerary && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center text-slate-400">
