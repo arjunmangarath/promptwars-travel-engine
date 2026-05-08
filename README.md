@@ -1,83 +1,243 @@
-# Travel Planning & Experience Engine
+# ✈️ Travel Planning & Experience Engine
 
-> PromptWars Bengaluru 2026 — Warm-Up Challenge
+> **AI-powered trip planner** — destination to full itinerary in seconds, not hours.  
+> Built with Google Gemini 2.5 Flash · Firebase · Cloud Run · Google Maps · Google Calendar
 
-## Vertical Chosen
-**Travel Planning & Experience Engine** — Plan trips dynamically with preferences, constraints, and real-time AI-powered updates.
+[![Deploy](https://img.shields.io/badge/Cloud%20Run-Live-4285F4?style=flat-square&logo=google-cloud&logoColor=white)](https://travel-planning-engine-296722128306.asia-south1.run.app)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tests](https://img.shields.io/badge/Tests-137%20passing-22c55e?style=flat-square&logo=jest)](./src/__tests__)
+[![Gemini](https://img.shields.io/badge/Gemini-2.5%20Flash-8B5CF6?style=flat-square&logo=google&logoColor=white)](https://ai.google.dev)
+[![PromptWars](https://img.shields.io/badge/PromptWars%202026-Winner%20🏆-f59e0b?style=flat-square)](https://github.com/arjunmangarath/promptwars-travel-engine)
 
-## Approach & Logic
+---
 
-This application is a smart, context-aware travel planning assistant that uses Google Gemini 2.5 Flash to generate personalised, day-by-day trip itineraries based on user preferences and constraints. Results are cached in Firebase Firestore for instant repeat lookups, displayed with Google Maps, and schedulable directly into Google Calendar.
+## 🌍 What It Does
 
-### Architecture
+Tell the engine your destination, travel dates, budget, and interests.  
+Get back a **complete, personalised day-by-day itinerary** — instantly.
+
+- 🗺️ **Interactive per-day maps** — all activity locations plotted as a route
+- 📅 **Google Calendar deep-links** — add any activity, day, or full trip in one click
+- ⚡ **Smart caching** — identical trips return in ~200ms from Firestore
+- 🌤️ **Real-time seasonal context** — Gemini knows today's date and advises accordingly
+- ♿ **Fully accessible** — ARIA, focus management, keyboard navigation, skip links
+
+---
+
+## 🏗️ Architecture
 
 ```
-User Input → Zod Validation → Firebase Cache Check → Gemini 2.5 Flash → Firestore Cache → Rendered Itinerary
-                                        ↓ (cache hit)
-                                  Instant Response
+User Input
+    │
+    ▼
+┌─────────────────────────────────┐
+│  Next.js Middleware              │  ← Sliding-window rate limiter (10 req/min/IP)
+│  Edge-compatible, no cold start  │
+└──────────────┬──────────────────┘
+               │
+               ▼
+┌─────────────────────────────────┐
+│  /api/plan  (App Router)         │
+│  Zod validation → input          │
+│  sanitizeForPrompt()             │  ← Strips injection attacks
+└──────────────┬──────────────────┘
+               │
+       ┌───────┴────────┐
+       │                │
+       ▼                ▼
+  CACHE HIT         CACHE MISS
+  Firestore         Vertex AI ADC
+  ~200ms            Gemini 2.5 Flash
+       │                │
+       │            Zod validates
+       │            AI output
+       │                │
+       │            Store in
+       │            Firestore
+       │            (7-day TTL)
+       └───────┬────────┘
+               │
+               ▼
+      Itinerary Response
+      X-Cache · X-Request-ID
+      X-Response-Time headers
 ```
 
-### Key Design Decisions
-- **Server-side API route** (`/api/plan`) keeps the Gemini API key secure — never exposed to the client
-- **Firebase Firestore caching** — identical requests return instantly without a second Gemini call
-- **Structured JSON output** from Gemini (`responseMimeType: "application/json"`) ensures reliable parsing
-- **Zod schema validation** on every request boundary — rejects malformed input before it reaches the AI
-- **Google Calendar integration** — every activity and day has a direct "Add to Google Calendar" link
-- **Google Maps embed** — destination rendered as an interactive map; all locations link to Google Maps
-- **Firebase Analytics** — trip planning and itinerary view events tracked automatically
-- **Accessibility-first UI** — ARIA labels, keyboard navigation, live regions, skip links, semantic HTML
+---
 
-## How It Works
+## 🔧 Google Services
 
-1. User fills in: destination, travel dates, travelers, budget, interests, dietary restrictions, mobility constraints, accommodation
-2. Preferences are validated client-side (form constraints) and server-side (Zod schema)
-3. Firebase Firestore is checked for a cached itinerary (7-day TTL) — returns instantly on hit
-4. On cache miss, a structured prompt is sent to **Google Gemini 2.5 Flash** (fallback: gemini-2.0-flash)
-5. Response is stored in Firestore, rendered with an interactive Google Maps embed and per-activity Google Calendar links
+| Service | How It's Used |
+|---------|--------------|
+| **Gemini 2.5 Flash** | Core AI engine — generates structured JSON itinerary with real-time seasonal context |
+| **Vertex AI (ADC)** | Enterprise auth via Application Default Credentials — no API key quotas |
+| **Firebase Firestore** | 7-day TTL cache — SHA-256 hash of preferences as cache key |
+| **Firebase Analytics** | `trip_planned` + `itinerary_viewed` events tracked client-side |
+| **Google Maps Embed** | Per-day route map with all activity pins (no API key required) |
+| **Google Calendar** | Pre-filled event deep-links for every activity, day, and full trip (no OAuth) |
+| **Google Cloud Run** | Production deployment — asia-south1, 512Mi, 300s timeout, auto-scaling |
 
-## Google Services Used
-- **Google Gemini API** (`gemini-2.5-flash`) — core AI planning engine with model fallback
-- **Firebase Firestore** — itinerary caching with 7-day TTL, reducing redundant AI calls
-- **Firebase Analytics** — tracks `trip_planned` and `itinerary_viewed` events
-- **Google Maps** — interactive destination embed + per-location "View on Google Maps" links
-- **Google Calendar** — "Add to Calendar" link on every activity, every day, and the full trip
-- **Google Cloud Run** — production deployment (asia-south1, 512Mi, auto-scaling)
+---
 
-## Tech Stack
-- **Next.js 15** (App Router) + **TypeScript** — type-safe full-stack framework
-- **@google/genai** — official Google Generative AI SDK
-- **firebase-admin** — server-side Firestore access via Application Default Credentials
-- **firebase** — client-side Analytics
-- **Tailwind CSS** — utility-first styling
-- **Zod** — runtime input validation
-- **Jest** + **ts-jest** — 55 unit tests across 3 suites (schema, cache, calendar)
+## ✨ Features
 
-## Setup
+| Feature | Details |
+|---------|---------|
+| 🤖 **AI Itinerary Generation** | Gemini 2.5 Flash produces day-by-day plans with times, locations, costs, tips |
+| 🗓️ **Day Slideshow UI** | Swipe through Day 1 → Day 2 → … with tab strip + dot indicators |
+| 🗺️ **Live Per-Day Maps** | Map updates when you switch slides — shows only that day's route |
+| 📍 **Location Deep-links** | Every activity location links to Google Maps search |
+| 📅 **Calendar Integration** | Add individual activities, full days, or the entire trip to Google Calendar |
+| ⚡ **Firestore Caching** | Same trip preferences = instant response + "⚡ Cached" badge |
+| 🌤️ **Weather Context** | Seasonal considerations injected by Gemini based on destination + travel dates |
+| 🎯 **Custom Interests** | 10 preset interest tags + type-your-own (max 2 words) with × remove |
+| ♿ **Accessibility** | Skip link, `aria-live` results, `aria-pressed` toggles, focus management |
+| 🛡️ **Security** | Rate limiting, prompt injection sanitization, full CSP, HSTS, CVE patched |
+
+---
+
+## 🛡️ Security
+
+- **Rate limiting** — sliding window, 10 req/min per IP, `Retry-After` header on 429
+- **Prompt injection** — `sanitizeForPrompt()` strips control characters and backtick markers
+- **Security headers** — HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+- **CVE-2025-66478** — Next.js patched from 15.3.2 → 15.3.9 on day of disclosure
+- **No secrets in code** — all credentials via env vars + Vertex AI Application Default Credentials
+
+---
+
+## 🧪 Tests
+
+137 tests across 8 suites — run with `npm test`
+
+| Suite | Tests | What's Covered |
+|-------|-------|---------------|
+| `cache.test.ts` | 13 | SHA-256 hashing, normalisation, Firestore TTL, graceful errors |
+| `calendar.test.ts` | 12 | URL format, time math, midnight wrap, encoding |
+| `errors.test.ts` | 26 | Error hierarchy, status codes, `isAppError` type guard |
+| `sanitize.test.ts` | 10 | Injection markers, control chars, truncation, Unicode |
+| `rate-limit.test.ts` | 9 | Sliding window, IP isolation, boundary conditions |
+| `components.test.tsx` | 11 | TripForm render, interaction, submit, ARIA |
+| `ItineraryView tests` | 14 | Data display, Maps links, Calendar links, cached badge |
+| `ErrorBoundary tests` | 4 | Crash recovery, custom fallback, error message |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 20+
+- A Google Cloud project with Gemini API and Firebase enabled
+- `gcloud` CLI authenticated (`gcloud auth application-default login`)
+
+### Local Development
 
 ```bash
-# 1. Clone the repo
+# 1. Clone
 git clone https://github.com/arjunmangarath/promptwars-travel-engine
 cd promptwars-travel-engine
 
-# 2. Install dependencies
+# 2. Install
 npm install
 
-# 3. Configure environment
+# 3. Configure
 cp .env.local.example .env.local
-# Add your GEMINI_API_KEY from Google AI Studio
-# Add GOOGLE_CLOUD_PROJECT for Firebase/Firestore
-
-# 4. Run locally
-npm run dev
-
-# 5. Run tests
-npm test
 ```
 
-## Assumptions
-- Gemini API key is provided via environment variable (never hardcoded)
-- Firebase Admin SDK uses Application Default Credentials on Cloud Run (no service account JSON in code)
-- Trip duration is calculated from start/end dates — minimum 1 night
-- Budget tiers (low/medium/high) guide Gemini's recommendations for accommodation and activities
-- Accessibility notes in the itinerary are generated only when mobility constraints are specified
-- Google Calendar links use the URL scheme — no OAuth required, opens in the user's browser
+Edit `.env.local`:
+
+```env
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+GEMINI_API_KEY=your-api-key-from-ai-studio   # optional if using Vertex AI ADC
+```
+
+```bash
+# 4. Run
+npm run dev         # http://localhost:3000
+
+# 5. Test
+npm test
+
+# 6. Build
+npm run build
+```
+
+### Deploy to Cloud Run
+
+```bash
+gcloud run deploy travel-planning-engine \
+  --source . \
+  --region asia-south1 \
+  --memory 512Mi \
+  --timeout 300 \
+  --allow-unauthenticated \
+  --project YOUR_PROJECT_ID
+```
+
+> **Important:** Set `--timeout 300`. Default 60s causes 504 errors on Gemini calls.
+
+---
+
+## 🗂️ Project Structure
+
+```
+src/
+├── app/
+│   ├── page.tsx                 # Main UI — form + slideshow results
+│   ├── api/plan/route.ts        # Core API — validate → cache → Gemini → store
+│   └── api/health/route.ts      # Health check listing all 6 Google services
+├── components/
+│   ├── ItineraryView.tsx        # Day slideshow, per-day map, activities
+│   ├── TripForm.tsx             # Form with interest tags + custom interest input
+│   └── ErrorBoundary.tsx        # React error boundary with retry
+├── lib/
+│   ├── gemini.ts                # Vertex AI + API key fallback, sanitizeForPrompt
+│   ├── cache.ts                 # Firestore cache with SHA-256 key + TTL
+│   ├── calendar.ts              # Google Calendar URL builders
+│   ├── analytics.ts             # Firebase Analytics events
+│   ├── errors.ts                # Custom error hierarchy
+│   ├── logger.ts                # Structured JSON logging (Cloud Run)
+│   └── env.ts                   # Centralised env access
+├── middleware.ts                # Edge rate limiter
+└── __tests__/                   # 137 tests across 8 suites
+```
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript (strict mode) |
+| AI | Google Gemini 2.5 Flash via Vertex AI |
+| Cache | Firebase Firestore |
+| Analytics | Firebase Analytics |
+| Maps | Google Maps Embed API |
+| Calendar | Google Calendar URL Scheme |
+| Deploy | Google Cloud Run |
+| Validation | Zod |
+| Styling | Tailwind CSS |
+| Testing | Jest + ts-jest + Testing Library |
+
+---
+
+## 🌐 Live Demo
+
+**[travel-planning-engine-296722128306.asia-south1.run.app](https://travel-planning-engine-296722128306.asia-south1.run.app)**
+
+---
+
+## 🏆 Recognition
+
+**Winner — PromptWars Bengaluru 2026**  
+Build with AI · Google for Developers · 8 May 2026  
+*Ultimate PromptWarrior — Pitching Arena*
+
+---
+
+## 📄 License
+
+MIT
