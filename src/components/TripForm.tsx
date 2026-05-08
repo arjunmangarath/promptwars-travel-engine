@@ -23,6 +23,8 @@ interface TripFormProps {
 
 export function TripForm({ onSubmit, loading }: TripFormProps) {
   const today = new Date().toISOString().split("T")[0];
+  const [customInterest, setCustomInterest] = useState("");
+  const [customInterestError, setCustomInterestError] = useState("");
   const [form, setForm] = useState<TripPreferences>({
     destination: "",
     startDate: today,
@@ -42,6 +44,30 @@ export function TripForm({ onSubmit, loading }: TripFormProps) {
         ? f.interests.filter((i) => i !== interest)
         : [...f.interests, interest],
     }));
+  }
+
+  function addCustomInterest() {
+    const trimmed = customInterest.trim();
+    if (!trimmed) return;
+    const words = trimmed.split(/\s+/);
+    if (words.length > 2) {
+      setCustomInterestError("Max 2 words");
+      return;
+    }
+    if (form.interests.includes(trimmed)) {
+      setCustomInterestError("Already added");
+      return;
+    }
+    setForm((f) => ({ ...f, interests: [...f.interests, trimmed] }));
+    setCustomInterest("");
+    setCustomInterestError("");
+  }
+
+  function handleCustomInterestKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addCustomInterest();
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -192,6 +218,55 @@ export function TripForm({ onSubmit, loading }: TripFormProps) {
               </button>
             );
           })}
+          {form.interests
+            .filter((i) => !INTERESTS.some(({ label }) => label === i))
+            .map((custom) => (
+              <span
+                key={custom}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-violet-600 text-white shadow-sm shadow-violet-200"
+              >
+                {custom}
+                <button
+                  type="button"
+                  onClick={() => toggleInterest(custom)}
+                  aria-label={`Remove ${custom}`}
+                  className="ml-0.5 hover:text-violet-200 focus:outline-none focus:ring-1 focus:ring-white rounded-full"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+        </div>
+
+        <div className="mt-2 flex gap-2 items-start">
+          <div className="flex-1 space-y-1">
+            <input
+              type="text"
+              value={customInterest}
+              onChange={(e) => {
+                setCustomInterest(e.target.value);
+                setCustomInterestError("");
+              }}
+              onKeyDown={handleCustomInterestKeyDown}
+              placeholder="Add your own (e.g. Street Art)"
+              maxLength={30}
+              aria-label="Add custom interest"
+              aria-describedby={customInterestError ? "custom-interest-error" : undefined}
+              className="input-field text-xs py-2"
+            />
+            {customInterestError && (
+              <p id="custom-interest-error" className="text-[10px] text-red-500" role="alert">
+                {customInterestError}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={addCustomInterest}
+            className="shrink-0 px-3 py-2 text-xs font-semibold text-indigo-600 border border-indigo-200 rounded-xl hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+          >
+            + Add
+          </button>
         </div>
       </fieldset>
 

@@ -28,16 +28,28 @@ function MapPinIcon() {
   );
 }
 
-function GoogleMapEmbed({ destination }: { destination: string }) {
+function GoogleMapEmbed({ destination, locations }: { destination: string; locations: string[] }) {
   const encodedDestination = encodeURIComponent(destination);
-  const embedSrc = `https://maps.google.com/maps?q=${encodedDestination}&output=embed&z=11`;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedDestination}`;
+
+  let embedSrc: string;
+  let mapsUrl: string;
+
+  if (locations.length > 1) {
+    const capped = locations.slice(0, 10);
+    const [first, ...rest] = capped;
+    const daddr = rest.map((l) => encodeURIComponent(l)).join("+to:");
+    embedSrc = `https://maps.google.com/maps?saddr=${encodeURIComponent(first)}&daddr=${daddr}&output=embed`;
+    mapsUrl = `https://www.google.com/maps/dir/${capped.map((l) => encodeURIComponent(l)).join("/")}`;
+  } else {
+    embedSrc = `https://maps.google.com/maps?q=${encodedDestination}&output=embed&z=11`;
+    mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedDestination}`;
+  }
 
   return (
     <section aria-label={`Map of ${destination}`} className="rounded-xl overflow-hidden border border-slate-100 shadow-sm">
       <div className="bg-slate-50 px-4 py-2.5 flex items-center justify-between border-b border-slate-100">
         <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
-          <span aria-hidden="true">🗺️</span> Destination Map
+          <span aria-hidden="true">🗺️</span> {locations.length > 1 ? `All Locations (${locations.length > 10 ? "first 10 shown" : `${locations.length} stops`})` : "Destination Map"}
         </h3>
         <a
           href={mapsUrl}
@@ -46,19 +58,36 @@ function GoogleMapEmbed({ destination }: { destination: string }) {
           className="text-xs text-indigo-600 hover:text-indigo-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
           aria-label={`Open ${destination} in Google Maps`}
         >
-          Open in Google Maps ↗
+          {locations.length > 1 ? "View route ↗" : "Open in Google Maps ↗"}
         </a>
       </div>
       <iframe
         title={`Google Maps view of ${destination}`}
         src={embedSrc}
         width="100%"
-        height="260"
+        height="300"
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
-        aria-label={`Interactive map showing ${destination}`}
+        aria-label={`Interactive map showing ${locations.length > 1 ? "all activity locations" : destination}`}
         className="block"
       />
+      {locations.length > 1 && (
+        <div className="bg-slate-50 border-t border-slate-100 px-4 py-2.5 flex flex-wrap gap-1.5">
+          {locations.slice(0, 10).map((loc, i) => (
+            <a
+              key={i}
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-full px-2 py-0.5 transition-colors"
+              aria-label={`Open ${loc} on Google Maps`}
+            >
+              <span className="w-3.5 h-3.5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[8px] font-bold shrink-0">{i + 1}</span>
+              {loc.length > 25 ? loc.slice(0, 25) + "…" : loc}
+            </a>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -136,7 +165,10 @@ export const ItineraryView = memo(function ItineraryView({ itinerary, cached }: 
 
       <div className="p-6 space-y-6">
         {/* Map */}
-        <GoogleMapEmbed destination={itinerary.destination} />
+        <GoogleMapEmbed
+          destination={itinerary.destination}
+          locations={Array.from(new Set(itinerary.days.flatMap((d) => d.activities.map((a) => a.location))))}
+        />
 
         {/* Weather */}
         {itinerary.weatherConsiderations && (
