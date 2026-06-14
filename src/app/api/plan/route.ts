@@ -8,6 +8,7 @@ import { z } from "zod";
 import type { PlanResponse, ApiError } from "@/types";
 
 const preferencesSchema = z.object({
+  originLocation: z.string().min(2).max(100).trim(),
   destination: z.string().min(2).max(100).trim(),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -17,6 +18,9 @@ const preferencesSchema = z.object({
   dietaryRestrictions: z.string().max(200).default(""),
   mobilityConstraints: z.string().max(200).default(""),
   accommodationType: z.enum(["hotel", "hostel", "airbnb", "resort"]),
+  transportMode: z.enum(["flight", "train", "bus", "car", "ship", "other"]),
+  departureTime: z.string().regex(/^\d{2}:\d{2}$/),
+  returnTime: z.string().regex(/^\d{2}:\d{2}$/),
 });
 
 const RESPONSE_HEADERS = {

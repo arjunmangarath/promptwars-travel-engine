@@ -26,6 +26,7 @@ export function TripForm({ onSubmit, loading }: TripFormProps) {
   const [customInterest, setCustomInterest] = useState("");
   const [customInterestError, setCustomInterestError] = useState("");
   const [form, setForm] = useState<TripPreferences>({
+    originLocation: "",
     destination: "",
     startDate: today,
     endDate: "",
@@ -35,6 +36,9 @@ export function TripForm({ onSubmit, loading }: TripFormProps) {
     dietaryRestrictions: "",
     mobilityConstraints: "",
     accommodationType: "hotel",
+    transportMode: "flight",
+    departureTime: "08:00",
+    returnTime: "18:00",
   });
 
   function toggleInterest(interest: string) {
@@ -87,21 +91,38 @@ export function TripForm({ onSubmit, loading }: TripFormProps) {
         <p className="text-xs text-slate-400 mt-0.5">Fill in the details below to generate your itinerary</p>
       </div>
 
-      {/* Destination */}
-      <div className="space-y-1.5">
-        <label htmlFor="destination" className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
-          📍 Destination <span className="text-red-400">*</span>
-        </label>
-        <input
-          id="destination"
-          type="text"
-          required
-          aria-required="true"
-          placeholder="e.g. Kyoto, Japan or Paris, France"
-          value={form.destination}
-          onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
-          className="input-field"
-        />
+      {/* Locations */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <label htmlFor="originLocation" className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            🛫 Current Location <span className="text-red-400">*</span>
+          </label>
+          <input
+            id="originLocation"
+            type="text"
+            required
+            aria-required="true"
+            placeholder="e.g. New York, USA"
+            value={form.originLocation}
+            onChange={(e) => setForm((f) => ({ ...f, originLocation: e.target.value }))}
+            className="input-field"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="destination" className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            📍 Destination <span className="text-red-400">*</span>
+          </label>
+          <input
+            id="destination"
+            type="text"
+            required
+            aria-required="true"
+            placeholder="e.g. Kyoto, Japan"
+            value={form.destination}
+            onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
+            className="input-field"
+          />
+        </div>
       </div>
 
       {/* Dates */}
@@ -134,6 +155,57 @@ export function TripForm({ onSubmit, loading }: TripFormProps) {
               value={form.endDate}
               onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
               className="input-field"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {/* Transport and Timings */}
+      <fieldset className="space-y-1.5">
+        <legend className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+          🚆 Transport & Timings <span className="text-red-400">*</span>
+        </legend>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label htmlFor="transportMode" className="sr-only">Mode of Transport</label>
+            <select
+              id="transportMode"
+              value={form.transportMode}
+              onChange={(e) => setForm((f) => ({ ...f, transportMode: e.target.value as TripPreferences["transportMode"] }))}
+              className="input-field"
+            >
+              <option value="flight">✈️ Flight</option>
+              <option value="train">🚆 Train</option>
+              <option value="bus">🚌 Bus</option>
+              <option value="car">🚗 Car</option>
+              <option value="ship">🚢 Ship/Ferry</option>
+              <option value="other">✨ Other</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="departureTime" className="sr-only">Departure Time</label>
+            <input
+              id="departureTime"
+              type="time"
+              required
+              aria-required="true"
+              value={form.departureTime}
+              onChange={(e) => setForm((f) => ({ ...f, departureTime: e.target.value }))}
+              className="input-field"
+              title="Time of Departure"
+            />
+          </div>
+          <div>
+            <label htmlFor="returnTime" className="sr-only">Return Time</label>
+            <input
+              id="returnTime"
+              type="time"
+              required
+              aria-required="true"
+              value={form.returnTime}
+              onChange={(e) => setForm((f) => ({ ...f, returnTime: e.target.value }))}
+              className="input-field"
+              title="Time of Return"
             />
           </div>
         </div>

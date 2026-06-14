@@ -2,6 +2,7 @@ import { hashPreferences } from "@/lib/cache";
 import type { TripPreferences, TripItinerary } from "@/types";
 
 const basePrefs: TripPreferences = {
+  originLocation: "New York, USA",
   destination: "Tokyo, Japan",
   startDate: "2026-06-01",
   endDate: "2026-06-07",
@@ -11,6 +12,9 @@ const basePrefs: TripPreferences = {
   dietaryRestrictions: "",
   mobilityConstraints: "",
   accommodationType: "hotel",
+  transportMode: "flight",
+  departureTime: "08:00",
+  returnTime: "18:00",
 };
 
 const sampleItinerary: TripItinerary = {

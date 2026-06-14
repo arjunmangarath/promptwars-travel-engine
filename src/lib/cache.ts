@@ -12,6 +12,7 @@ const TTL_MS = TTL_DAYS * 24 * 60 * 60 * 1000;
  */
 export function hashPreferences(prefs: TripPreferences): string {
   const normalized = JSON.stringify({
+    originLocation: prefs.originLocation.toLowerCase().trim(),
     destination: prefs.destination.toLowerCase().trim(),
     startDate: prefs.startDate,
     endDate: prefs.endDate,
@@ -21,6 +22,9 @@ export function hashPreferences(prefs: TripPreferences): string {
     dietaryRestrictions: prefs.dietaryRestrictions,
     mobilityConstraints: prefs.mobilityConstraints,
     accommodationType: prefs.accommodationType,
+    transportMode: prefs.transportMode,
+    departureTime: prefs.departureTime,
+    returnTime: prefs.returnTime,
   });
   return crypto.createHash("sha256").update(normalized).digest("hex").slice(0, 20);
 }

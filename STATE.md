@@ -87,11 +87,12 @@ Build right the first time. Max Google services. Ask questions. Post live thread
 
 ## Completed Tasks
 <!-- Append as tasks complete -->
-- [ ] Challenge revealed
-- [ ] Stack decided
-- [ ] Phase 1 planned
-- [ ] Phase 1 executed
-- [ ] Phase 1 verified
+- [x] Challenge revealed
+- [x] Stack decided
+- [x] Phase 1 planned
+- [x] Phase 1 executed
+- [x] Phase 1 verified
+- [x] Added Location, Transport, and Timing Preferences
 
 ## Active Bugs
 <!-- Track here so new agents don't re-introduce fixes -->

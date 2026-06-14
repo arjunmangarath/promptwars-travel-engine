@@ -109,7 +109,7 @@ describe("TripForm", () => {
 
   it("renders mobility needs input", () => {
     render(<TripForm onSubmit={jest.fn()} loading={false} />);
-    expect(screen.getByLabelText(/mobility or accessibility needs/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/accessibility needs/i)).toBeInTheDocument();
   });
 
   it("calls onSubmit with preferences when form is submitted", () => {

@@ -16,6 +16,7 @@ const preferencesSchema = z.object({
 });
 
 const valid: TripPreferences = {
+  originLocation: "New York, USA",
   destination: "Tokyo, Japan",
   startDate: "2026-06-01",
   endDate: "2026-06-07",
@@ -25,6 +26,9 @@ const valid: TripPreferences = {
   dietaryRestrictions: "vegetarian",
   mobilityConstraints: "",
   accommodationType: "hotel",
+  transportMode: "flight",
+  departureTime: "08:00",
+  returnTime: "18:00",
 };
 
 describe("Trip preferences validation", () => {

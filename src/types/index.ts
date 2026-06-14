@@ -1,4 +1,5 @@
 export interface TripPreferences {
+  readonly originLocation: string;
   readonly destination: string;
   readonly startDate: string;
   readonly endDate: string;
@@ -8,6 +9,9 @@ export interface TripPreferences {
   readonly dietaryRestrictions: string;
   readonly mobilityConstraints: string;
   readonly accommodationType: "hotel" | "hostel" | "airbnb" | "resort";
+  readonly transportMode: "flight" | "train" | "bus" | "car" | "ship" | "other";
+  readonly departureTime: string;
+  readonly returnTime: string;
 }
 
 export interface Activity {

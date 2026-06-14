@@ -66,6 +66,7 @@ export async function generateItinerary(
   const today = new Date().toISOString().split("T")[0];
 
   // Sanitize all free-text inputs before injecting into the prompt
+  const safeOriginLocation = sanitizeForPrompt(preferences.originLocation, 100);
   const safeDestination = sanitizeForPrompt(preferences.destination, 100);
   const safeDietary = sanitizeForPrompt(preferences.dietaryRestrictions || "none");
   const safeMobility = sanitizeForPrompt(preferences.mobilityConstraints || "none");
@@ -76,6 +77,7 @@ export async function generateItinerary(
   const prompt = `You are an expert travel planner with real-time destination knowledge. Today's date is ${today}. Generate a detailed, practical travel itinerary that accounts for current seasonal conditions.
 
 Trip Details:
+- Origin Location: ${safeOriginLocation}
 - Destination: ${safeDestination}
 - Dates: ${preferences.startDate} to ${preferences.endDate} (${nights} nights)
 - Travelers: ${preferences.travelers}
@@ -84,8 +86,12 @@ Trip Details:
 - Dietary restrictions: ${safeDietary}
 - Mobility constraints: ${safeMobility}
 - Accommodation: ${preferences.accommodationType}
+- Transport Mode: ${preferences.transportMode}
+- Departure Time (from origin): ${preferences.departureTime}
+- Return Time (leaving destination): ${preferences.returnTime}
 
 Consider current season, local events, and typical weather for the travel dates. Provide seasonal weather context and best-time tips.
+Ensure the first day's activities account for the departure time and transport mode from the origin, and the last day's activities align with the return time.
 
 Return ONLY valid JSON matching this exact schema:
 {
