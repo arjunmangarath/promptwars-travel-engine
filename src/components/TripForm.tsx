@@ -165,6 +165,9 @@ export function TripForm({ onSubmit, loading }: TripFormProps) {
         <legend className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
           🚆 Transport & Timings <span className="text-red-400">*</span>
         </legend>
+        <p className="text-[10px] text-slate-500 mb-2 mt-0.5">
+          Departure time is from your current location. Return time is from your destination.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <label htmlFor="transportMode" className="sr-only">Mode of Transport</label>
